@@ -1,0 +1,17 @@
+{
+  "geode": "5.0.0",
+  "gd": {
+    "win": "2.2081",
+    "android": "2.2081",
+    "mac": "2.2081"
+  },
+  "id": "yallcode.gitdash",
+  "name": "GitDash",
+  "version": "v0.1.0",
+  "developer": "YallCode",
+  "description": "Version control (timeline snapshots) for the GD level editor.",
+  "tags": ["editor", "utility", "creator"],
+  "links": {
+    "source": "https://github.com/yallcode/GitDash"
+  }
+}
