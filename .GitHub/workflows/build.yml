@@ -1,15 +1,15 @@
-# .github/workflows/build.yml
 name: Build GitDash
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Build - ${{ matrix.config.name }}
+    name: Build (${{ matrix.config.name }})
     runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: false
@@ -17,40 +17,49 @@ jobs:
         config:
           - name: Windows
             os: windows-latest
-            target: win
-
-          - name: macOS
-            os: macos-latest
-            target: mac
+            target: Win64
 
           - name: Android32
             os: ubuntu-latest
-            target: android32
+            target: Android32
 
           - name: Android64
             os: ubuntu-latest
-            target: android64
+            target: Android64
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Build mod
         uses: geode-sdk/build-geode-mod@main
+        id: build
         with:
-          sdk: v4.4.0          # Pin this. Do NOT use 'latest' in production.
+          sdk: v5.6.1
           target: ${{ matrix.config.target }}
-          export-pdb: true     # Useful for debugging crashes on Windows
+          combine: true
+          ccache-variant: ""
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GitDash-${{ matrix.config.name }}
+          path: ${{ steps.build.outputs.build-output }}
 
   package:
     name: Package .geode file
     runs-on: ubuntu-latest
-    needs: build   # Only runs after ALL platform builds succeed
+    needs: build
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Package mod
-        uses: geode-sdk/build-geode-mod/package@main
+      - name: Merge platform builds
+        uses: geode-sdk/build-geode-mod/combine@main
+        id: combine
+
+      - name: Upload final .geode
+        uses: actions/upload-artifact@v4
         with:
-          build-output: .      # Collect artifacts from the build job
-          sdk: v4.4.0
+          name: GitDash.geode
+          path: ${{ steps.combine.outputs.build-output }}
