@@ -1,0 +1,56 @@
+# .github/workflows/build.yml
+name: Build GitDash
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build - ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - name: Windows
+            os: windows-latest
+            target: win
+
+          - name: macOS
+            os: macos-latest
+            target: mac
+
+          - name: Android32
+            os: ubuntu-latest
+            target: android32
+
+          - name: Android64
+            os: ubuntu-latest
+            target: android64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          sdk: v4.4.0          # Pin this. Do NOT use 'latest' in production.
+          target: ${{ matrix.config.target }}
+          export-pdb: true     # Useful for debugging crashes on Windows
+
+  package:
+    name: Package .geode file
+    runs-on: ubuntu-latest
+    needs: build   # Only runs after ALL platform builds succeed
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package mod
+        uses: geode-sdk/build-geode-mod/package@main
+        with:
+          build-output: .      # Collect artifacts from the build job
+          sdk: v4.4.0
